@@ -10,7 +10,7 @@ module coord_trans  ! Module for coordinate transformations (geodetic, ECEF, ENU
   ! Public interface
   !----------------------------------------------------------------------
   public :: set_earth_model, geodetic_to_ecef, ecef_to_geodetic, ecef_to_enu, enu_to_ecef, &
-            enu_to_aer, aer_to_enu, ecef_to_aer, aer_to_ecef, ECEFspher2ENU, &
+            enu_to_aer, aer_to_enu, ecef_to_aer, aer_to_ecef, & ! ECEFspher2ENU, &
             geog2geomag, geomag2geog, r2alt, alt2r, rotz, roty, rotgm2gg, rotgg2gm
 
   integer, parameter :: wp = selected_real_kind(15, 307)
