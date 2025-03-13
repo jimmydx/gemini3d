@@ -35,6 +35,12 @@ real(wp), parameter :: Re = 6371.0e3_wp
   !! Earth Radius [meters]
 real(wp), parameter :: Me = 5.9722e24_wp
   !! Earth mass
+real(wp), parameter :: a  = 6378137.0_wp               ! Semi-major axis (m)
+real(wp), parameter :: f  = 1.0_wp/298.257223563_wp    ! Flattening
+real(wp), parameter :: b  = a*(1.0_wp - f)             ! Semi-minor axis (m)
+real(wp), parameter :: e2 = (a**2 - b**2)/a**2         ! First eccentricity squared
+real(wp), parameter :: ep2= (a**2 - b**2)/b**2         ! Second eccentricity squared
+  !!WGS84  Ellipsoid parameters
 
 
 !> ION DATA (need to be doubled?)
