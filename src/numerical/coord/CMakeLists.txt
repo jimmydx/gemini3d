@@ -12,6 +12,9 @@ target_link_libraries(dipole PRIVATE newton)
 add_library(geomagnetic OBJECT geomagnetic.f90)
 target_link_libraries(geomagnetic PRIVATE const)
 
+add_library(coord_trans OBJECT coord_trans.f90)
+target_link_libraries(coord_trans PRIVATE const)
+
 add_library(meshobj OBJECT meshobj.f90)
 target_link_libraries(meshobj PRIVATE const geomagnetic spherical h5fortran::h5fortran)
 
