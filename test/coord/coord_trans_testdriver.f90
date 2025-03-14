@@ -30,7 +30,7 @@ program coord_trans_testdriver
 
    integer, parameter :: nlat = 10, nlon = 10, nh = 10
    real(wp), dimension(2) :: latlims, lonlims, hlims
-   integer :: ii, jj, kk, N, idx ! Loop indices and counters
+   integer :: ii, jj, kk ! Loop indices
    real(wp), dimension(:,:,:), allocatable :: lat_grid, lon_grid, h_grid
    real(wp), dimension(:,:,:), allocatable :: x_grid, y_grid, z_grid
    real(wp), dimension(:,:,:), allocatable :: lat_grid_rec, lon_grid_rec, h_grid_rec
