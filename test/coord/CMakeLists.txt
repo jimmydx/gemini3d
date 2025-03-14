@@ -13,7 +13,7 @@ target_link_libraries(geomag2geog_testdriver PRIVATE geomagnetic const)
 add_test(NAME geomag2geog_testdriver COMMAND newton_testdriver)
 
 add_executable(coord_trans_testdriver coord_trans_testdriver.f90)
-target_link_libraries(coord_trans_testdriver PRIVATE coord_Trans const)
+target_link_libraries(coord_trans_testdriver PRIVATE coord_trans const)
 add_test(NAME coord_trans_testdriver COMMAND coord_trans_testdriver)
 
 add_executable(grid_testdriver grid_testdriver.f90)
