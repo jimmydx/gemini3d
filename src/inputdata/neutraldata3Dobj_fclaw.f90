@@ -7,15 +7,16 @@ use inputdataobj, only: inputdata
 use neutraldataobj, only: neutraldata
 use neutraldata3Dobj, only: neutraldata3D
 use meshobj, only: curvmesh
-use gemini3d_config, only: gemini_cfg
+use gemini3d_config, only: gemini_cfg, neutral_coord_geomagnetic_spherical, &
+  neutral_coord_geographic_loximuthal
 use reader, only: get_simsize3,get_simsize2,get_grid2,get_precip
 use timeutils, only: dateinc,date_filename
 use grid, only: gridflag
-use geomagnetic, only: ECEFspher2ENU
+use geomagnetic, only: ECEFspher2ENU,geog2loximuth
 
 implicit none (type, external)
 private
-public :: neutraldata3D_fclaw
+public :: neutraldata3D_fclaw,set_fclaw_neutral_query_positions
 
 
 !> type definition for 3D neutral data that will be provided from a parallel model (i.e. one that runs with GEMINI)
@@ -64,6 +65,27 @@ end type neutraldata3D_fclaw
 
 
 contains
+  !> Map GEMINI locations into the native Cartesian coordinates queried from ForestClaw/MAGIC.
+  subroutine set_fclaw_neutral_query_positions(cfg,alt,theta,phi,glat,glon,x_m,y_m,z_m)
+    type(gemini_cfg), intent(in) :: cfg
+    real(wp), dimension(:,:,:), intent(in) :: alt,theta,phi,glat,glon
+    real(wp), dimension(:,:,:), intent(out) :: x_m,y_m,z_m
+    real(wp) :: source_theta,source_phi
+
+    select case (trim(adjustl(cfg%neutral_coord_mode)))
+    case (neutral_coord_geomagnetic_spherical)
+      source_phi=cfg%sourcemlon*pi/180._wp
+      source_theta=pi/2._wp-cfg%sourcemlat*pi/180._wp
+      call ECEFspher2ENU(alt,theta,phi,source_theta,source_phi,x_m,y_m,z_m)
+    case (neutral_coord_geographic_loximuthal)
+      call geog2loximuth(glat,glon,cfg%neutral_ref_glat,cfg%neutral_ref_glon,x_m,y_m)
+      z_m=alt
+    case default
+      error stop 'unsupported neutral_coord_mode in ForestClaw query mapping'
+    end select
+  end subroutine set_fclaw_neutral_query_positions
+
+
   !> just force the size flag to be set
   subroutine set_sizeflag(self,x)
     class(neutraldata3D_fclaw), intent(inout) :: self

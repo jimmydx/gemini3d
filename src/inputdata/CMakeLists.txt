@@ -68,7 +68,7 @@ add_library(neutraldata3D_fclaw OBJECT neutraldata3Dobj_fclaw.f90
 $<TARGET_OBJECTS:grid>
 )
 target_link_libraries(neutraldata3D_fclaw PRIVATE
-const gemini3d_config meshobj interp timeutils neutraldata neutraldata3D inputdata
+const gemini3d_config geomagnetic meshobj interp timeutils neutraldata neutraldata3D inputdata
 )
 
 add_library(neutraldata3D_fclaw_axisymm OBJECT neutraldata3Dobj_fclaw_axisymm.f90

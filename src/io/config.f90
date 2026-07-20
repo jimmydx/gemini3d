@@ -1,11 +1,16 @@
 module gemini3d_config
 
+use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
 use filesystem, only: suffix
 use phys_consts, only : wp
 
 implicit none (type, external)
 private
-public :: read_configfile, gemini_cfg
+character(*), parameter :: neutral_coord_geomagnetic_spherical = 'geomagnetic_spherical'
+character(*), parameter :: neutral_coord_geographic_loximuthal = 'geographic_loximuthal'
+
+public :: read_configfile, gemini_cfg, validate_neutral_coord_config
+public :: neutral_coord_geomagnetic_spherical, neutral_coord_geographic_loximuthal
 
 type :: gemini_cfg
   !> basic simulation information (base)
@@ -31,6 +36,9 @@ type :: gemini_cfg
   real(wp) :: sourcemlat = 0,sourcemlon = 0         ! source latitude and longitude
   real(wp) :: dtneu = 0                           ! time step between neutral inputs
   real(wp) :: dxn = 0,drhon = 0,dzn = 0               ! dx,dy (or drho),dz for neutral inputs
+  character(32) :: neutral_coord_mode = neutral_coord_geomagnetic_spherical
+  real(wp) :: neutral_ref_glat = 999._wp
+  real(wp) :: neutral_ref_glon = 999._wp
 
   !> preciptiation file inputs
   integer :: flagprecfile                       ! whether or not we have precipitation input from a file
@@ -139,6 +147,27 @@ end interface
 
 
 contains
+  subroutine validate_neutral_coord_config(cfg)
+    class(gemini_cfg), intent(in) :: cfg
+
+    select case (trim(adjustl(cfg%neutral_coord_mode)))
+    case (neutral_coord_geomagnetic_spherical)
+      return
+    case (neutral_coord_geographic_loximuthal)
+      if (.not. ieee_is_finite(cfg%neutral_ref_glat) .or. &
+          cfg%neutral_ref_glat<=-90._wp .or. cfg%neutral_ref_glat>=90._wp) then
+        error stop 'neutral_ref_glat must be finite and strictly between -90 and 90 degrees'
+      end if
+      if (.not. ieee_is_finite(cfg%neutral_ref_glon) .or. &
+          cfg%neutral_ref_glon< -180._wp .or. cfg%neutral_ref_glon>=180._wp) then
+        error stop 'neutral_ref_glon must be finite and in [-180, 180) degrees'
+      end if
+    case default
+      error stop 'neutral_coord_mode must be geomagnetic_spherical or geographic_loximuthal'
+    end select
+  end subroutine validate_neutral_coord_config
+
+
   subroutine read_configfile(cfg, verbose)
     !! READS THE INPUT CONFIGURATION FILE, ASSIGNS VARIABLES FOR FILENAMES, SIZES, ETC.
     class(gemini_cfg), intent(inout) :: cfg

@@ -2,17 +2,16 @@ module neutraldata3Dobj_fclaw_axisymm
 
 use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
 use, intrinsic :: iso_fortran_env, only: stderr=>error_unit
-use phys_consts, only: wp,debug,pi,Re
+use phys_consts, only: wp
 use inputdataobj, only: inputdata
 use neutraldataobj, only: neutraldata
 use neutraldata3Dobj, only: neutraldata3D
-use neutraldata3Dobj_fclaw, only: neutraldata3D_fclaw
+use neutraldata3Dobj_fclaw, only: neutraldata3D_fclaw,set_fclaw_neutral_query_positions
 use meshobj, only: curvmesh
 use gemini3d_config, only: gemini_cfg
 use reader, only: get_simsize3,get_simsize2,get_grid2,get_precip
 use timeutils, only: dateinc,date_filename
 use grid, only: gridflag
-use geomagnetic, only: ECEFspher2ENU
 
 implicit none (type, external)
 private
@@ -117,7 +116,7 @@ contains
     class(neutraldata3D_fclaw_axisymm), intent(inout) :: self
     type(gemini_cfg), intent(in) :: cfg
     class(curvmesh), intent(in) :: x
-    real(wp) :: theta1,phi1,phip
+    real(wp) :: phip
     real(wp), dimension(3) :: ezp,eyp,tmpvec,exprm
     real(wp), dimension(3) :: erhop    ! FIXME: axisymmetric
     real(wp) :: tmpsca
@@ -126,14 +125,10 @@ contains
     ! Space for coordinate sites and projections in neutraldata3D object
     self%zi=>self%coord1i; self%xi=>self%coord2i; self%yi=>self%coord3i;     ! alias coordinates of interpolation sites
 
-    !Neutral source locations specified in input file, here referenced by spherical magnetic coordinates.
-    phi1=cfg%sourcemlon*pi/180
-    theta1=pi/2 - cfg%sourcemlat*pi/180
-
-    ! coordinate arrays (ENU)
-    call ECEFspher2ENU(x%alt(1:x%lx1,1:x%lx2,1:x%lx3),x%theta(1:x%lx1,1:x%lx2,1:x%lx3),x%phi(1:x%lx1,1:x%lx2,1:x%lx3), &
-                          theta1,phi1, &
-                          self%ximat,self%yimat,self%zimat)
+    call set_fclaw_neutral_query_positions(cfg, &
+      x%alt(1:x%lx1,1:x%lx2,1:x%lx3),x%theta(1:x%lx1,1:x%lx2,1:x%lx3), &
+      x%phi(1:x%lx1,1:x%lx2,1:x%lx3),x%glat(1:x%lx1,1:x%lx2,1:x%lx3), &
+      x%glon(1:x%lx1,1:x%lx2,1:x%lx3),self%ximat,self%yimat,self%zimat)
 
     do ix3=1,x%lx3
       do ix2=1,x%lx2

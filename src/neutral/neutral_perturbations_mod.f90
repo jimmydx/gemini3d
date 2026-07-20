@@ -1,7 +1,8 @@
 module neutral_perturbations
 
 use phys_consts, only: wp, lnchem, pi, Re, debug
-use gemini3d_config, only: gemini_cfg
+use gemini3d_config, only: gemini_cfg,validate_neutral_coord_config, &
+  neutral_coord_geomagnetic_spherical,neutral_coord_geographic_loximuthal
 use meshobj, only: curvmesh
 use mpimod, only: mpi_cfg
 use neutraldataobj, only: neutraldata
@@ -22,6 +23,7 @@ implicit none (type, external)
 
 ! flag to check whether to apply neutral perturbations
 logical :: flagneuperturb=.false.
+logical :: neutral_coord_reported=.false.
 
 private
 public :: init_neutral_perturb,neutral_perturb,clear_neutral_perturb
@@ -38,6 +40,9 @@ contains
 
     !! perform an initialization for the perturbation quantities
     if (cfg%flagdneu==1) then
+      call validate_neutral_coord_config(cfg)
+      call report_neutral_coordinate_mode(cfg)
+
       ! set flag denoted neutral perturbations
       flagneuperturb=.true.
 
@@ -65,6 +70,25 @@ contains
       call atmosperturb%init(cfg,cfg%sourcedir,x,dt,cfg%dtneu,ymd,UTsec)
     end if
   end subroutine init_neutral_perturb
+
+
+  subroutine report_neutral_coordinate_mode(cfg)
+    type(gemini_cfg), intent(in) :: cfg
+
+    if (neutral_coord_reported .or. mpi_cfg%myid/=0) return
+
+    print '(a,a)', 'Neutral coordinate mode: ',trim(cfg%neutral_coord_mode)
+    print '(a,f12.1,a)', 'Neutral coordinate Earth radius Re: ',Re,' m'
+    select case (trim(adjustl(cfg%neutral_coord_mode)))
+    case (neutral_coord_geomagnetic_spherical)
+      print '(a,f11.5,a,f12.5,a)', 'Neutral magnetic origin: mlat=',cfg%sourcemlat, &
+        ' deg, mlon=',cfg%sourcemlon,' deg'
+    case (neutral_coord_geographic_loximuthal)
+      print '(a,f11.5,a,f12.5,a)', 'Neutral geographic origin: glat=',cfg%neutral_ref_glat, &
+        ' deg, glon=',cfg%neutral_ref_glon,' deg'
+    end select
+    neutral_coord_reported=.true.
+  end subroutine report_neutral_coordinate_mode
 
 
  !> update neutral perturbations and add to main neutral arrays.  It is assumed that the main GEMINI app will control
