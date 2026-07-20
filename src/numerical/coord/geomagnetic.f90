@@ -2,6 +2,7 @@ module geomagnetic
 
 !> transformations and data relevant to converting geographic to geomagnetic coordinates
 
+use, intrinsic :: ieee_arithmetic, only : ieee_quiet_nan, ieee_value
 use phys_consts, only: wp,Re,pi
 implicit none (type, external)
 
@@ -9,10 +10,12 @@ implicit none (type, external)
 ! magnetic pole location in geographic coordinates. Now based on the year (set_magnetic_pole)
 real(wp) :: thetan=11._wp*pi/180
 real(wp) :: phin=289._wp*pi/180
+real(wp), parameter :: half_pi=pi/2._wp
+real(wp), parameter :: quarter_pi=pi/4._wp
 
 private
 public :: geomag2geog, geog2geomag, r2alt, alt2r, rotgg2gm, rotgm2gg, ECEFspher2ENU, ENU2ECEFspher, &
-            set_magnetic_pole
+            geog2loximuth, loximuth2geog, set_magnetic_pole
 
 contains
 
@@ -101,6 +104,88 @@ contains
     glon=phig2*180._wp/pi
     glat=thetag2*180._wp/pi
   end subroutine geomag2geog
+
+
+  !> Project geographic degrees onto a spherical loximuthal x-east/y-north grid in meters.
+  elemental subroutine geog2loximuth(glat_deg,glon_deg,ref_glat_deg,ref_glon_deg,x_m,y_m)
+    real(wp), intent(in) :: glat_deg,glon_deg
+    real(wp), intent(in) :: ref_glat_deg,ref_glon_deg
+    real(wp), intent(out) :: x_m,y_m
+    real(wp) :: phi,lambda,phi_c,lambda_0
+    real(wp) :: dphi,dpsi,dlambda,singular_tol,nan_value
+
+    phi=glat_deg*pi/180._wp
+    lambda=glon_deg*pi/180._wp
+    phi_c=ref_glat_deg*pi/180._wp
+    lambda_0=ref_glon_deg*pi/180._wp
+    nan_value=ieee_value(0._wp,ieee_quiet_nan)
+
+    if (abs(phi)>=half_pi .or. abs(phi_c)>=half_pi) then
+      x_m=nan_value
+      y_m=nan_value
+      return
+    end if
+
+    dphi=phi-phi_c
+    dlambda=loximuth_wrap_to_pi(lambda-lambda_0)
+    y_m=Re*dphi
+
+    singular_tol=sqrt(epsilon(1._wp))
+    if (abs(dphi)<=singular_tol) then
+      x_m=Re*dlambda*cos(phi_c)
+    else
+      dpsi=loximuth_isometric_latitude(phi)-loximuth_isometric_latitude(phi_c)
+      x_m=Re*dlambda*dphi/dpsi
+    end if
+  end subroutine geog2loximuth
+
+
+  !> Invert spherical loximuthal x-east/y-north meters to geographic degrees.
+  elemental subroutine loximuth2geog(x_m,y_m,ref_glat_deg,ref_glon_deg,glat_deg,glon_deg)
+    real(wp), intent(in) :: x_m,y_m
+    real(wp), intent(in) :: ref_glat_deg,ref_glon_deg
+    real(wp), intent(out) :: glat_deg,glon_deg
+    real(wp) :: phi,lambda,phi_c,lambda_0
+    real(wp) :: dphi,dpsi,dlambda,singular_tol,nan_value
+
+    phi_c=ref_glat_deg*pi/180._wp
+    lambda_0=ref_glon_deg*pi/180._wp
+    dphi=y_m/Re
+    phi=phi_c+dphi
+    nan_value=ieee_value(0._wp,ieee_quiet_nan)
+
+    if (abs(phi)>=half_pi .or. abs(phi_c)>=half_pi) then
+      glat_deg=nan_value
+      glon_deg=nan_value
+      return
+    end if
+
+    singular_tol=sqrt(epsilon(1._wp))
+    if (abs(dphi)<=singular_tol) then
+      dlambda=x_m/(Re*cos(phi_c))
+    else
+      dpsi=loximuth_isometric_latitude(phi)-loximuth_isometric_latitude(phi_c)
+      dlambda=x_m*dpsi/(Re*dphi)
+    end if
+
+    lambda=loximuth_wrap_to_pi(lambda_0+dlambda)
+    glat_deg=phi*180._wp/pi
+    glon_deg=lambda*180._wp/pi
+  end subroutine loximuth2geog
+
+
+  elemental real(wp) function loximuth_isometric_latitude(phi) result(psi)
+    real(wp), intent(in) :: phi
+
+    psi=log(tan(quarter_pi+phi/2._wp))
+  end function loximuth_isometric_latitude
+
+
+  elemental real(wp) function loximuth_wrap_to_pi(angle) result(wrapped)
+    real(wp), intent(in) :: angle
+
+    wrapped=modulo(angle+pi,2._wp*pi)-pi
+  end function loximuth_wrap_to_pi
 
 
   !> convert geocentric distance into altitude (assume spherical Earth but could use other model)
