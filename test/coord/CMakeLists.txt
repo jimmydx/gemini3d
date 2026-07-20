@@ -16,6 +16,10 @@ add_executable(loximuthal_testdriver loximuthal_testdriver.f90)
 target_link_libraries(loximuthal_testdriver PRIVATE geomagnetic const)
 add_test(NAME Loximuthal COMMAND loximuthal_testdriver)
 
+add_executable(coordinate_transforms_testdriver coordinate_transforms_testdriver.f90)
+target_link_libraries(coordinate_transforms_testdriver PRIVATE coordinate_transforms newton dipole geomagnetic const)
+add_test(NAME CoordinateTransforms COMMAND coordinate_transforms_testdriver)
+
 add_executable(grid_testdriver grid_testdriver.f90)
 target_link_libraries(grid_testdriver PRIVATE newton spherical geomagnetic dipole meshobj_dipole meshobj const)
 add_test(NAME GridTest COMMAND grid_testdriver)
@@ -55,6 +59,7 @@ endif()
 get_property(test_names DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY TESTS)
 
 set_property(TEST ${test_names} PROPERTY LABELS Gemini3d:unit:coord)
+set_property(TEST CoordinateTransforms APPEND PROPERTY LABELS Gemini3d:unit:coord:analytic)
 
 if(host_ramGB LESS 8)
   set_property(TEST ${test_names} PROPERTY RESOURCE_LOCK cpu_ram)
