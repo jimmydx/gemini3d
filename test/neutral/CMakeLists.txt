@@ -25,6 +25,7 @@ add_test(NAME GeminiProjection COMMAND gemini_projection)
 
 add_executable(fclaw_neutral_coordinates_testdriver fclaw_neutral_coordinates_testdriver.f90)
 target_link_libraries(fclaw_neutral_coordinates_testdriver PRIVATE gemini3d)
+set_property(TARGET fclaw_neutral_coordinates_testdriver PROPERTY LINKER_LANGUAGE Fortran)
 add_test(NAME FclawNeutralCoordinates COMMAND fclaw_neutral_coordinates_testdriver)
 set_tests_properties(FclawNeutralCoordinates PROPERTIES LABELS unit)
 set_tests_properties(GeminiProjection PROPERTIES
