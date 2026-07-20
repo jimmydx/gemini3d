@@ -25,6 +25,8 @@ contains
     integer :: potsolve, flagperiodic=0, flagoutput, flagcap=0, flag_fang, flagdneu
     integer :: interptype
     real(wp) :: sourcemlat,sourcemlon
+    character(32) :: neutral_coord_mode=neutral_coord_geomagnetic_spherical
+    real(wp) :: neutral_ref_glat=999._wp,neutral_ref_glon=999._wp
     real(wp) :: dtneu
     real(wp) :: dxn=0.0,drhon=0.0,dzn=0.0
     real(wp) :: dtprec=0
@@ -75,7 +77,8 @@ contains
     namelist /base/ ymd, UTsec0, tdur, dtout, activ, tcfl, Teinf
     namelist /files/ file_format, indat_size, indat_grid, indat_file
     namelist /flags/ potsolve, flagperiodic, flagoutput
-    namelist /neutral_perturb/ flagdneu, interptype, sourcemlat, sourcemlon, dtneu, dxn, drhon, dzn, source_dir
+    namelist /neutral_perturb/ flagdneu, interptype, sourcemlat, sourcemlon, dtneu, dxn, drhon, dzn, source_dir, &
+      neutral_coord_mode, neutral_ref_glat, neutral_ref_glon
     namelist /precip/ dtprec, prec_dir
     namelist /efield/ dtE0, E0_dir
     namelist /fang/ flag_fang
@@ -156,6 +159,10 @@ contains
       cfg%drhon = drhon
       cfg%dzn = dzn
       cfg%dxn = dxn
+      cfg%neutral_coord_mode = trim(adjustl(neutral_coord_mode))
+      cfg%neutral_ref_glat = neutral_ref_glat
+      cfg%neutral_ref_glon = neutral_ref_glon
+      call validate_neutral_coord_config(cfg)
     else
       cfg%flagdneu = 0
       cfg%sourcedir = ""

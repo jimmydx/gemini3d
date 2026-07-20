@@ -9,6 +9,25 @@ REQUIRED_FILES ${_test_file}
 LABELS unit
 )
 
+add_executable(neutral_coord_config_testdriver neutral_coord_config_testdriver.f90)
+target_link_libraries(neutral_coord_config_testdriver PRIVATE
+  gemini3d_config gemini3d_sysinfo ffilesystem::filesystem)
+set_property(TARGET neutral_coord_config_testdriver PROPERTY LINKER_LANGUAGE Fortran)
+
+set(_neutral_config_dir ${PROJECT_SOURCE_DIR}/test/config)
+add_test(NAME NeutralCoordConfigLegacy COMMAND neutral_coord_config_testdriver
+  ${_neutral_config_dir}/neutral_coord_legacy.nml geomagnetic_spherical)
+add_test(NAME NeutralCoordConfigLoximuthal COMMAND neutral_coord_config_testdriver
+  ${_neutral_config_dir}/neutral_coord_loximuthal.nml geographic_loximuthal)
+
+foreach(case IN ITEMS invalid_mode invalid_lat invalid_lon)
+  add_test(NAME NeutralCoordConfig_${case} COMMAND neutral_coord_config_testdriver
+    ${_neutral_config_dir}/neutral_coord_${case}.nml)
+  set_tests_properties(NeutralCoordConfig_${case} PROPERTIES WILL_FAIL true LABELS unit)
+endforeach()
+
+set_tests_properties(NeutralCoordConfigLegacy NeutralCoordConfigLoximuthal PROPERTIES LABELS unit)
+
 
 if(f2018assumed_rank)
   add_library(debug_dump OBJECT debug_dump.f90)
