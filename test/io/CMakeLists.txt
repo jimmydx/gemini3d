@@ -12,6 +12,7 @@ LABELS unit
 add_executable(neutral_coord_config_testdriver neutral_coord_config_testdriver.f90)
 target_link_libraries(neutral_coord_config_testdriver PRIVATE
   gemini3d_config gemini3d_sysinfo ffilesystem::filesystem)
+set_property(TARGET neutral_coord_config_testdriver PROPERTY LINKER_LANGUAGE Fortran)
 
 set(_neutral_config_dir ${PROJECT_SOURCE_DIR}/test/config)
 add_test(NAME NeutralCoordConfigLegacy COMMAND neutral_coord_config_testdriver
