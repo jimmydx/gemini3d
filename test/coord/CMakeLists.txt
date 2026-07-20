@@ -12,6 +12,10 @@ add_executable(geomag2geog_testdriver geomag2geog_testdriver.f90)
 target_link_libraries(geomag2geog_testdriver PRIVATE geomagnetic const)
 add_test(NAME Geomag2Geog COMMAND geomag2geog_testdriver)
 
+add_executable(loximuthal_testdriver loximuthal_testdriver.f90)
+target_link_libraries(loximuthal_testdriver PRIVATE geomagnetic const)
+add_test(NAME Loximuthal COMMAND loximuthal_testdriver)
+
 add_executable(grid_testdriver grid_testdriver.f90)
 target_link_libraries(grid_testdriver PRIVATE newton spherical geomagnetic dipole meshobj_dipole meshobj const)
 add_test(NAME GridTest COMMAND grid_testdriver)
